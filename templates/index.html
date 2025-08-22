@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block content %}
+
+{% if username %}
+  <!-- Cabecera con usuario y logout -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5>Hola, {{ username }}</h5>
+    <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm">Cerrar sesión</a>
+  </div>
+{% endif %}
+
+
+<div class="col-12 col-lg-7">
+
+  <!-- FORMULARIO PARA CREAR TAREA -->
+  <div class="card mb-3 shadow-sm">
+    <div class="card-body">
+      <h5 class="card-title mb-3">Crear nueva tarea</h5>
+      <form method="post" action="{{ url_for('crear') }}">
+        <div class="mb-2">
+          <input type="text" name="titulo" class="form-control" placeholder="Título de la tarea" required>
+        </div>
+        <div class="mb-2">
+          <textarea name="descripcion" class="form-control" placeholder="Descripción (opcional)"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Agregar tarea</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- FILTRO DE LISTADO -->
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h5 class="m-0">Listado</h5>
+    <form method="get" class="d-flex gap-2">
+      <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Buscar...">
+      <select name="orden" class="form-select">
+        <option value="recientes" {% if orden=='recientes' %}selected{% endif %}>Más recientes</option>
+        <option value="antiguas" {% if orden=='antiguas' %}selected{% endif %}>Más antiguas</option>
+        <option value="titulo" {% if orden=='titulo' %}selected{% endif %}>Por título</option>
+      </select>
+      <button class="btn btn-outline-secondary" type="submit">Filtrar</button>
+    </form>
+  </div>
+
+  <!-- LISTADO DE TAREAS -->
+  <ul class="list-group shadow-sm">
+    {% for t in tareas %}
+    <li class="list-group-item d-flex align-items-start justify-content-between">
+      <div class="me-3">
+        <div class="form-check">
+          <form method="post" action="{{ url_for('toggle', tarea_id=t.id) }}">
+            <input class="form-check-input" type="checkbox" id="t{{t.id}}"
+                   onChange="this.form.submit()" {% if t.completada %}checked{% endif %}>
+            <label class="form-check-label" for="t{{t.id}}">
+              <strong class="{% if t.completada %}text-decoration-line-through text-muted{% endif %}">
+                {{ t.titulo }}
+              </strong>
+            </label>
+          </form>
+        </div>
+        {% if t.descripcion %}
+        <div class="text-muted small mt-1 {{ 'text-decoration-line-through' if t.completada }}">{{ t.descripcion }}</div>
+        {% endif %}
+        <div class="small text-secondary mt-1">Creada: {{ t.creada_en.strftime('%d-%m-%Y %H:%M') }}</div>
+      </div>
+      <div class="btn-group">
+        <a href="{{ url_for('editar', tarea_id=t.id) }}" class="btn btn-sm btn-outline-primary">Editar</a>
+        <form method="post" action="{{ url_for('eliminar', tarea_id=t.id) }}" onsubmit="return confirm('¿Eliminar esta tarea?');">
+          <button class="btn btn-sm btn-outline-danger" type="submit">Eliminar</button>
+        </form>
+      </div>
+    </li>
+    {% else %}
+    <li class="list-group-item text-center text-muted">No hay tareas</li>
+    {% endfor %}
+  </ul>
+
+</div>
+
+{% endblock %}

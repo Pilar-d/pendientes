@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Iniciar sesión</h2>
+<form method="post" class="mb-3">
+  <input type="text" name="username" placeholder="Usuario" class="form-control mb-2" required>
+  <input type="password" name="password" placeholder="Contraseña" class="form-control mb-2" required>
+  <button type="submit" class="btn btn-primary">Entrar</button>
+</form>
+<a href="{{ url_for('registro') }}">Crear una cuenta</a>
+{% endblock %}
