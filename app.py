@@ -3,7 +3,13 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 
+from flask import Flask
+
 app = Flask(__name__)
+
+@app.route("/")
+def index():
+    return "Hola desde Flask en Heroku!"
 app.secret_key = "supersecreto"
 
 # Configuración SQLite
