@@ -7,9 +7,6 @@ from flask import Flask
 
 app = Flask(__name__)
 
-@app.route("/")
-def index():
-    return "Hola desde Flask en Heroku!"
 app.secret_key = "supersecreto"
 
 # Configuración SQLite
