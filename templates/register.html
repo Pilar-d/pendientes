@@ -4,7 +4,7 @@
     <div class="col-12 col-md-6 col-lg-4">
         <div class="card shadow">
             <div class="card-body">
-                <h3 class="card-title text-center mb-4">Iniciar Sesión</h3>
+                <h3 class="card-title text-center mb-4">Registrarse</h3>
                 
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
@@ -26,11 +26,11 @@
                         <label for="password" class="form-label">Contraseña</label>
                         <input type="password" class="form-control" id="password" name="password" required>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100">Iniciar Sesión</button>
+                    <button type="submit" class="btn btn-primary w-100">Registrarse</button>
                 </form>
                 
                 <div class="text-center mt-3">
-                    <p>¿No tienes cuenta? <a href="{{ url_for('register') }}">Regístrate aquí</a></p>
+                    <p>¿Ya tienes cuenta? <a href="{{ url_for('login') }}">Inicia sesión aquí</a></p>
                 </div>
             </div>
         </div>
