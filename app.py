@@ -4,10 +4,15 @@ from models import db, Usuario, Tarea
 from sqlalchemy.exc import OperationalError
 from sqlalchemy import text  # Importar la función text
 import sqlite3
+import os
+from dotenv import load_dotenv
+
+# Cargar variables de entorno
+load_dotenv()
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'tu-clave-secreta-aqui-muy-segura'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tareas.db'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'clave-temporal-desarrollo')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///tareas.db').replace('postgres://', 'postgresql://')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
@@ -269,3 +274,5 @@ def actualizar_db():
 
 if __name__ == '__main__':
     app.run(debug=True)
+else:
+    application = app  # ← IMPORTANTE para Vercel
