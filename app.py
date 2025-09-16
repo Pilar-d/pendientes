@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from datetime import datetime
 from models import db, Usuario, Tarea
 from sqlalchemy.exc import OperationalError
-from sqlalchemy import text  # Importar la función text
+from sqlalchemy import text
 import sqlite3
 import os
 from dotenv import load_dotenv
@@ -12,7 +12,19 @@ load_dotenv()
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'clave-temporal-desarrollo')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///tareas.db').replace('postgres://', 'postgresql://')
+
+# Configuración mejorada para base de datos
+database_url = os.environ.get('DATABASE_URL')
+if database_url:
+    # Asegurar formato correcto para PostgreSQL
+    if database_url.startswith('postgres://'):
+        app.config['SQLALCHEMY_DATABASE_URI'] = database_url.replace('postgres://', 'postgresql://')
+    else:
+        app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+else:
+    # SQLite solo para desarrollo local
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tareas.db'
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
@@ -20,8 +32,6 @@ db.init_app(app)
 # Crear tablas de base de datos (solo si no existen)
 with app.app_context():
     try:
-        # Verificar si la tabla ya existe y tiene las columnas necesarias
-        # USAR text() para declarar explícitamente la expresión SQL
         db.session.execute(text("SELECT fecha_limite, categoria FROM tarea LIMIT 1")).fetchall()
         print("La base de datos ya tiene las columnas necesarias")
     except OperationalError:
@@ -30,6 +40,7 @@ with app.app_context():
         db.create_all()
         print("Tablas creadas correctamente")
 
+# ... (el resto de tus rutas se mantienen igual, sin cambios)
 # Rutas de autenticación
 @app.route('/login', methods=['GET', 'POST'])
 def login():
