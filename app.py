@@ -1,10 +1,10 @@
+import os
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from datetime import datetime
 from models import db, Usuario, Tarea
 from sqlalchemy.exc import OperationalError
 from sqlalchemy import text
 import sqlite3
-import os
 from dotenv import load_dotenv
 
 # Cargar variables de entorno
@@ -13,16 +13,21 @@ load_dotenv()
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'clave-temporal-desarrollo')
 
-# Configuración mejorada para base de datos
-database_url = os.environ.get('DATABASE_URL')
-if database_url:
-    # Asegurar formato correcto para PostgreSQL
-    if database_url.startswith('postgres://'):
-        app.config['SQLALCHEMY_DATABASE_URI'] = database_url.replace('postgres://', 'postgresql://')
+# Configuración mejorada para Vercel y base de datos
+if os.environ.get('VERCEL'):
+    # Configuración para Vercel - usar PostgreSQL si está disponible
+    database_url = os.environ.get('DATABASE_URL')
+    if database_url:
+        # Asegurar formato correcto para PostgreSQL
+        if database_url.startswith('postgres://'):
+            app.config['SQLALCHEMY_DATABASE_URI'] = database_url.replace('postgres://', 'postgresql://')
+        else:
+            app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     else:
-        app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+        # SQLite en /tmp para Vercel (datos temporales)
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/tareas.db'
 else:
-    # SQLite solo para desarrollo local
+    # Configuración para desarrollo local
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tareas.db'
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -32,15 +37,19 @@ db.init_app(app)
 # Crear tablas de base de datos (solo si no existen)
 with app.app_context():
     try:
+        # Verificar si las tablas existen y tienen las columnas necesarias
+        db.session.execute(text("SELECT 1 FROM usuario LIMIT 1")).fetchall()
         db.session.execute(text("SELECT fecha_limite, categoria FROM tarea LIMIT 1")).fetchall()
         print("La base de datos ya tiene las columnas necesarias")
     except OperationalError:
         print("La base de datos necesita actualización. Creando tablas...")
-        db.drop_all()
-        db.create_all()
-        print("Tablas creadas correctamente")
+        try:
+            db.drop_all()
+            db.create_all()
+            print("Tablas creadas correctamente")
+        except Exception as e:
+            print(f"Error al crear tablas: {str(e)}")
 
-# ... (el resto de tus rutas se mantienen igual, sin cambios)
 # Rutas de autenticación
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -283,7 +292,9 @@ def actualizar_db():
         flash(f'Error al actualizar la base de datos: {str(e)}', 'error')
         return redirect(url_for('index'))
 
+# Configuración para Vercel
 if __name__ == '__main__':
     app.run(debug=True)
 else:
-    application = app  # ← IMPORTANTE para Vercel
+    # Esta línea es crucial para que Vercel pueda ejecutar la aplicación
+    application = app
